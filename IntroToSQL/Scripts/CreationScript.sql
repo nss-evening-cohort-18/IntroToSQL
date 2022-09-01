@@ -45,9 +45,9 @@ CREATE TABLE [Customer] (
 GO
 
 CREATE TABLE [Order] (
-  [Id] INTEGER PRIMARY KEY IDENTITY(10001,1),
+  [Id] INTEGER PRIMARY KEY IDENTITY(10001,1), --first Order ID will be 10001 and they will increment by 1 after that
   [CustomerId] INTEGER FOREIGN KEY REFERENCES [Customer]([Id]) NOT NULL,
-  [DatePlaced] DATETIME DEFAULT GETDATE(),
+  [DatePlaced] DATETIME NOT NULL,
   [DateCompleted] DATETIME
 )
 GO
@@ -83,20 +83,6 @@ INSERT INTO [Customer] ([Name],
 						[IsVerified],
 						[Created],
 						[LastOnline])
-VALUES ('Joe Shmo',
-		'',
-		'6151119876',
-		'joe@shmo.com',
-		0,
-		GETDATE(),
-		GETDATE());
-INSERT INTO [Customer] ([Name],
-						[Address],
-						[Phone],
-						[Email],
-						[IsVerified],
-						[Created],
-						[LastOnline])
 VALUES ('Amy Farrah-Fowler',
 		'123 Sheldon Towers Apt H',
 		'6151234567',
@@ -118,6 +104,20 @@ VALUES ('Biz Nasty',
 		0,
 		'2022-03-11 12:00:00',
 		'2022-08-25 10:00:00');
+INSERT INTO [Customer] ([Name],
+						[Address],
+						[Phone],
+						[Email],
+						[IsVerified],
+						[Created],
+						[LastOnline])
+VALUES ('Joe Shmo',
+		'',
+		'6151119876',
+		'joe@shmo.com',
+		0,
+		GETDATE(),
+		GETDATE());
 
 --Item data
 INSERT INTO [Item] ([Name],
@@ -125,61 +125,71 @@ INSERT INTO [Item] ([Name],
 					[Cost],
 					[Price],
 					[Status],
-					[LastUpdated])
+					[LastUpdated],
+					[StockQty])
 VALUES ('Beach Ball',
 		'Fun for everyone!',
 		1.00,
 		5.00,
 		'A',
-		GETDATE());
+		GETDATE(),
+		250);
 INSERT INTO [Item] ([Name],
 					[Description],
 					[Cost],
 					[Price],
 					[Status],
-					[LastUpdated])
+					[LastUpdated],
+					[StockQty])
 VALUES ('Reading Glasses',
 		'If you can read this, you don''t need them',
 		9.00,
 		25.00,
 		'A',
-		GETDATE());
+		GETDATE(),
+		15);
 INSERT INTO [Item] ([Name],
 					[Description],
 					[Cost],
 					[Price],
 					[Status],
-					[LastUpdated])
+					[LastUpdated],
+					[StockQty])
 VALUES ('iPad Pro',
 		'You so fancy.',
 		0.90,
 		1099.99,
 		'A',
-		GETDATE());
+		GETDATE(),
+		4);
 INSERT INTO [Item] ([Name],
 					[Description],
 					[Cost],
 					[Price],
 					[Status],
-					[LastUpdated])
+					[LastUpdated],
+					[StockQty])
 VALUES ('iPad Pro Case',
 		'Don''t drop it.',
 		0.05,
 		50.00,
 		'A',
-		GETDATE());
+		GETDATE(),
+		15);
 INSERT INTO [Item] ([Name],
 					[Description],
 					[Cost],
 					[Price],
 					[Status],
-					[LastUpdated])
+					[LastUpdated],
+					[StockQty])
 VALUES ('50 Shades of Gray',
 		'Comes with discreet book jacket.',
 		7.00,
 		15.00,
 		'A',
-		GETDATE());
+		GETDATE(),
+		0);
 
 --Order data
 INSERT INTO [Order] ([CustomerId],
@@ -191,9 +201,9 @@ VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Brian%'),
 INSERT INTO [Order] ([CustomerId],
 					 [DatePlaced],
 					 [DateCompleted])
-VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Brian%'),
-		GETDATE(),
-		NULL);
+VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Amy%'),
+		'2021-09-23 11:52:07.000',
+		'2021-09-24 10:00:00.000');
 INSERT INTO [Order] ([CustomerId],
 					 [DatePlaced],
 					 [DateCompleted])
@@ -203,15 +213,9 @@ VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Joe%'),
 INSERT INTO [Order] ([CustomerId],
 					 [DatePlaced],
 					 [DateCompleted])
-VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Amy%'),
-		'2021-09-23 11:52:07.000',
-		'2021-09-24 10:00:00.000');
-INSERT INTO [Order] ([CustomerId],
-					 [DatePlaced],
-					 [DateCompleted])
-VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Biz%'),
-		'2022-08-25 10:00:00.000',
-		'2022-08-26 10:00:00.000');
+VALUES ((SELECT Id FROM Customer WHERE [Name] LIKE 'Brian%'),
+		GETDATE(),
+		NULL);
 
 --Order Transaction data
 INSERT INTO [OrderTransaction] ([ItemId],
@@ -219,12 +223,46 @@ INSERT INTO [OrderTransaction] ([ItemId],
 								[Qty],
 								[ExtendedPrice])
 VALUES (1,
+		10001,
+		400,
+		3.50);
+INSERT INTO [OrderTransaction] ([ItemId],
+								[OrderId],
+								[Qty],
+								[ExtendedPrice])
+VALUES (1,
+		10004,
 		1,
-		40,
-		4.10);
-
-SELECT *
-FROM [Item];
-
-SELECT *
-FROM [Order];
+		5.00);
+INSERT INTO [OrderTransaction] ([ItemId],
+								[OrderId],
+								[Qty],
+								[ExtendedPrice])
+VALUES (2,
+		10002,
+		1,
+		25.00);
+INSERT INTO [OrderTransaction] ([ItemId],
+								[OrderId],
+								[Qty],
+								[ExtendedPrice])
+VALUES (5,
+		10002,
+		1,
+		12.99);
+INSERT INTO [OrderTransaction] ([ItemId],
+								[OrderId],
+								[Qty],
+								[ExtendedPrice])
+VALUES (4,
+		10003,
+		1,
+		40.00);
+INSERT INTO [OrderTransaction] ([ItemId],
+								[OrderId],
+								[Qty],
+								[ExtendedPrice])
+VALUES (3,
+		10003,
+		1,
+		850.00);
