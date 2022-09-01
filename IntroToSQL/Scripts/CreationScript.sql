@@ -46,7 +46,7 @@ GO
 
 CREATE TABLE [Order] (
   [Id] INTEGER PRIMARY KEY IDENTITY(10001,1), --first Order ID will be 10001 and they will increment by 1 after that
-  [CustomerId] INTEGER FOREIGN KEY REFERENCES [Customer]([Id]) NOT NULL,
+  [CustomerId] INTEGER FOREIGN KEY REFERENCES [Customer]([Id]) NOT NULL, --a FK reference makes it where something can't be deleted if it's referenced in another table
   [DatePlaced] DATETIME NOT NULL,
   [DateCompleted] DATETIME
 )
