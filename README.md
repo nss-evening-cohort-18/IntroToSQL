@@ -8,3 +8,4 @@ After that make sure to pick the `IntroToSQL` database from the dropdown at the 
 
 ![image](https://user-images.githubusercontent.com/44753236/187995852-0462b9b1-5f24-42aa-9b6b-dfe51582fbdd.png)
 
+![image](https://user-images.githubusercontent.com/44753236/188001256-ad8b34d9-3060-4521-b7b6-e092a02fab74.png)
