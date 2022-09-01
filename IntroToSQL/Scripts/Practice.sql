@@ -2,6 +2,13 @@
 SELECT *
 FROM Customer;
 
+--get all orders
+SELECT *
+FROM [Order];
+
+--Try to DELETE a customer with an order and see what happens. The FOREIGN KEY we defined is being enforced automatically!
+DELETE FROM Customer WHERE Id = 1;
+
 -- get customer names
 SELECT [Name]
 FROM Customer;
