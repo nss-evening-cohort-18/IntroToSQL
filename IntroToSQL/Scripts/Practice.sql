@@ -33,7 +33,8 @@ ORDER BY Customer.Id ASC, [Order].Id DESC;
 --Get customers and all order/transaction/item info, but only if they have an order
 SELECT c.Name AS CustomerName,
 	   [Order].Id AS OrderId,
-	   i.Name AS ItemName
+	   i.Name AS ItemName,
+	   ExtendedPrice * Qty AS LineTotal
 FROM Customer c
 INNER JOIN [Order] ON CustomerId = c.Id
 INNER JOIN OrderTransaction ON OrderId = [Order].Id
@@ -75,4 +76,65 @@ WHERE OrderTotal < 1400
 
 
 
-SELECT * FROM OrderTransaction
+SELECT * FROM Customer
+
+UPDATE Customer
+SET [Name] = 'Mr. Brian',
+    Created = '2020-01-01 01:01:01'
+WHERE [Name] LIKE 'Brian%'
+
+SELECT DISTINCT i.Name AS ItemName
+FROM [Order] o
+INNER JOIN OrderTransaction ON OrderId = o.Id
+LEFT JOIN Item i ON i.Id = ItemId
+
+
+--  not equals <>   !=  NOT NULL
+SELECT MAX(Qty)
+FROM OrderTransaction
+
+
+SELECT TOP 1 *
+FROM Item
+ORDER BY Price DESC
+
+SELECT *
+FROM Item
+WHERE Price = (SELECT MAX(Price) FROM Item)
+
+SELECT *
+FROM Item
+WHERE Price BETWEEN 20 AND 100
+
+SELECT *
+FROM Item
+WHERE Name IN ('Beach Ball', 'Reading Glasses')
+
+
+SELECT c.Name AS CustomerName,
+	   [Order].Id AS OrderId,
+	   i.Name AS ItemName,
+	   ExtendedPrice * Qty AS LineTotal
+FROM Customer c
+INNER JOIN [Order] ON CustomerId = c.Id
+INNER JOIN OrderTransaction ON OrderId = [Order].Id
+LEFT JOIN Item i ON i.Id = ItemId
+WHERE i.Name IN ('Beach Ball', 'Reading Glasses')
+
+IF EXISTS(SELECT * FROM Item WHERE [Name] = 'Beach Bal')
+SELECT 'True'
+ELSE SELECT 'False'
+
+SELECT CASE
+  WHEN EXISTS(SELECT * FROM Item WHERE [Name] = 'Beach Bal')
+  THEN 'TRUE'
+  ELSE 'FALSE'
+  END
+
+SELECT [Name],
+	CASE
+		WHEN StockQty = 0
+		THEN 1
+		ELSE StockQty
+	END AS StockQty
+FROM Item
