@@ -19,9 +19,26 @@ public class CustomersController : ControllerBase
 
     // GET: api/<Customers>
     [HttpGet]
-    public List<Customer> Get()
+    public IActionResult Get(bool? isVerified = null)
     {
-        return _customerRepo.GetAll();
+        IEnumerable<Customer> results;
+
+        if (isVerified != null)
+        {
+            results = _customerRepo.GetAllByFilter((bool)isVerified);
+        }
+        else
+        {
+            results = _customerRepo.DapperGetAll();
+        }
+        if (results != null)
+        {
+            return Ok(results);
+        }
+        else
+        {
+            return BadRequest();
+        }
     }
 
     // GET api/<Customer>/5

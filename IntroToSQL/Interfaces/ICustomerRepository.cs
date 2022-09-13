@@ -4,6 +4,8 @@ namespace IntroToSQL.Interfaces
 {
     public interface ICustomerRepository
     {
-        public List<Customer> GetAll();
+        public IEnumerable<Customer> GetAll();
+        public IEnumerable<Customer> DapperGetAll();
+        public IEnumerable<Customer> GetAllByFilter(bool isVerified);
     }
 }

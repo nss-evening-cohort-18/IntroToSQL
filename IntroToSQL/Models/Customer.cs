@@ -12,7 +12,7 @@ namespace IntroToSQL.Models
         public bool IsVerified { get; set; }
         public DateTime Created { get; set; }
         public DateTime LastOnline { get; set; }
-        public List<Order> Orders { get; set; }
+        public List<Order> Orders { get; set; } = new();
 
     }
 }

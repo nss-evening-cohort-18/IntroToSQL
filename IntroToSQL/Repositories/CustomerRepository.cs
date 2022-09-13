@@ -1,4 +1,5 @@
 ﻿using System.Data.SqlClient;
+using Dapper;
 using IntroToSQL.Interfaces;
 using IntroToSQL.Models;
 
@@ -7,37 +8,24 @@ namespace IntroToSQL.Repositories;
 public class CustomerRepository : ICustomerRepository
 {
     private readonly string _connectionString;
-    private readonly string _otherConnectionString;
-    private SqlConnection MyConnection
-    {
-        get { return new SqlConnection(_connectionString); }
-    }
-
+    private readonly string _getAllSql;
     private SqlConnection Connection => new SqlConnection(_connectionString);
-    private SqlConnection OtherConnection => new SqlConnection(_otherConnectionString);
 
     public CustomerRepository(IConfiguration configuration)
     {
         _connectionString = configuration.GetConnectionString("BriansSuperSecretConnection");
+        _getAllSql = @"SELECT *
+                       FROM Customer";
     }
 
-    public List<Customer> GetAll()
+    public IEnumerable<Customer> GetAll()
     {
-        using (SqlConnection c = OtherConnection)
+        using (SqlConnection c = Connection)
         {
             c.Open();
             using (SqlCommand cmd = c.CreateCommand())
             {
-                cmd.CommandText = @"
-                                    SELECT Id,
-                                           [Name],
-                                           [Address],
-                                           Phone,
-                                           Email,
-                                           IsVerified,
-                                           Created,
-                                           LastOnline
-                                    FROM Customer";
+                cmd.CommandText = _getAllSql;
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     List<Customer> customers = new List<Customer>();
@@ -61,6 +49,50 @@ public class CustomerRepository : ICustomerRepository
                 }
 
             }
+        }
+    }
+
+    public IEnumerable<Customer> DapperGetAll()
+    {
+        string sql = "SELECT * FROM Customer INNER JOIN [Order] ON [Order].CustomerId = Customer.Id;";
+        using (var conn = Connection)
+        {
+            Dictionary<int, Customer> customers = new();
+            return conn.Query<Customer, Order, Customer>(sql, (customer, order) => {
+                Customer currentCustomer;
+
+                if (!customers.TryGetValue(customer.Id, out currentCustomer))
+                {
+                    currentCustomer = customer;
+                    customers.Add(currentCustomer.Id, currentCustomer);
+                }
+                
+                currentCustomer.Orders.Add(order);
+                return currentCustomer;
+            });
+            
+        }
+    }
+
+    public IEnumerable<Customer> GetAllByFilter(bool isVerified)
+    {
+        string sql = "SELECT * FROM Customer LEFT JOIN [Order] ON [Order].CustomerId = Customer.Id WHERE IsVerified = @IsVerified;";
+        using (var conn = Connection)
+        {
+            Dictionary<int, Customer> customers = new();
+            return conn.Query<Customer, Order, Customer>(sql, (customer, order) => {
+                Customer currentCustomer;
+
+                if (!customers.TryGetValue(customer.Id, out currentCustomer))
+                {
+                    currentCustomer = customer;
+                    customers.Add(currentCustomer.Id, currentCustomer);
+                }
+
+                currentCustomer.Orders.Add(order);
+                return currentCustomer;
+            }, new { IsVerified = isVerified });
+
         }
     }
 }
