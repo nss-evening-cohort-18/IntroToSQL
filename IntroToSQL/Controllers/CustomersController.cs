@@ -10,42 +10,50 @@ namespace IntroToSQL.Controllers;
 [ApiController]
 public class CustomersController : ControllerBase
 {
-    public CustomersController(ICustomerRepository customerRepo)
+    public CustomersController(ICustomerRepository customerRepo, IOrderRepository orderRepo)
     {
         _customerRepo = customerRepo;
+        _orderRepo = orderRepo;
     }
 
     private ICustomerRepository _customerRepo;
+    private IOrderRepository _orderRepo;
 
     // GET: api/<Customers>
     [HttpGet]
     public List<Customer> Get()
     {
-        return _customerRepo.GetAll();
+        return GetAllCustomersPlainById();
     }
 
-    // GET api/<Customer>/5
-    [HttpGet("{id}")]
-    public string Get(int id)
+    private List<Customer> GetAllCustomersPlain()
     {
-        return "value";
+        var customers = _customerRepo.GetAll();
+        var orders = _orderRepo.GetAll();
+
+        foreach (Customer customer in customers)
+        {
+            customer.Orders = orders.Where(o => o.CustomerId == customer.Id).ToList();
+        }
+
+        return customers;
     }
 
-    // POST api/<Customer>
-    [HttpPost]
-    public void Post([FromBody] string value)
+    private List<Customer> GetAllCustomersPlainById()
     {
+        var customers = _customerRepo.GetAll();
+
+        foreach (Customer customer in customers)
+        {
+            var orders = _orderRepo.GetByCustomerId(customer.Id).ToList();
+            customer.Orders = orders;
+        }
+
+        return customers;
     }
 
-    // PUT api/<Customer>/5
-    [HttpPut("{id}")]
-    public void Put(int id, [FromBody] string value)
+    private List<Customer> GetAllCustomersSingleQuery()
     {
-    }
-
-    // DELETE api/<Customer>/5
-    [HttpDelete("{id}")]
-    public void Delete(int id)
-    {
+        return _customerRepo.GetFullCustomers();
     }
 }

@@ -4,32 +4,15 @@ using IntroToSQL.Models;
 
 namespace IntroToSQL.Repositories;
 
-public class CustomerRepository : ICustomerRepository
+public class CustomerRepository : BaseRepository, ICustomerRepository
 {
-    private readonly string _connectionString;
-    private readonly string _otherConnectionString;
-    private SqlConnection MyConnection
-    {
-        get { return new SqlConnection(_connectionString); }
-    }
-
-    private SqlConnection Connection => new SqlConnection(_connectionString);
-    private SqlConnection OtherConnection => new SqlConnection(_otherConnectionString);
-
-    public CustomerRepository(IConfiguration configuration)
-    {
-        _connectionString = configuration.GetConnectionString("BriansSuperSecretConnection");
-    }
+    public CustomerRepository(IConfiguration configuration) : base(configuration) { }
 
     public List<Customer> GetAll()
     {
-        using (SqlConnection c = OtherConnection)
+        using (SqlConnection c = Connection)
         {
-            c.Open();
-            using (SqlCommand cmd = c.CreateCommand())
-            {
-                cmd.CommandText = @"
-                                    SELECT Id,
+            string customersSql = @"SELECT Id,
                                            [Name],
                                            [Address],
                                            Phone,
@@ -38,9 +21,15 @@ public class CustomerRepository : ICustomerRepository
                                            Created,
                                            LastOnline
                                     FROM Customer";
+
+            c.Open();
+            using (SqlCommand cmd = c.CreateCommand())
+            {
+                List<Customer> customers = new List<Customer>();
+
+                cmd.CommandText = customersSql;
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    List<Customer> customers = new List<Customer>();
                     while (reader.Read())
                     {
                         Customer customer = new Customer()
@@ -59,7 +48,60 @@ public class CustomerRepository : ICustomerRepository
                     }
                     return customers;
                 }
+            }
+        }
+    }
 
+    public List<Customer> GetFullCustomers()
+    {
+        using (SqlConnection c = Connection)
+        {
+            string customersSql = @"SELECT *
+                                    FROM Customer c
+                                    LEFT JOIN[Order] o ON o.CustomerId = c.Id; ";
+
+            c.Open();
+            using (SqlCommand cmd = c.CreateCommand())
+            {
+                Dictionary<int, Customer> customerDictionary = new();
+
+                cmd.CommandText = customersSql;
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    Customer currentCustomer;
+
+                    while (reader.Read())
+                    {
+                        if (!customerDictionary.TryGetValue())
+                        {
+
+                        }
+
+                        Customer customer = new Customer()
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            Address = reader.GetString(reader.GetOrdinal("Address")),
+                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                            Email = reader.GetString(reader.GetOrdinal("Email")),
+                            IsVerified = reader.GetBoolean(reader.GetOrdinal("IsVerified")),
+                            Created = reader.GetDateTime(reader.GetOrdinal("Created")),
+                            LastOnline = reader.GetDateTime(reader.GetOrdinal("LastOnline")),
+                            Orders = new List<Order>(),
+                        };
+                        customerDictionary.Add(customer.Id, customer );
+
+                        Order order = new Order()
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            DatePlaced = reader.GetDateTime(reader.GetOrdinal("DatePlaced")),
+                            DateCompleted = reader.IsDBNull(reader.GetOrdinal("DateCompleted")) ? null : reader.GetDateTime(reader.GetOrdinal("DateCompleted")),
+                        };
+                        customer.Orders.Add(order);
+                    }
+                    //return customers;
+                }
             }
         }
     }
