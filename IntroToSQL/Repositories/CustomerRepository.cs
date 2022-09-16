@@ -56,9 +56,13 @@ public class CustomerRepository : BaseRepository, ICustomerRepository
     {
         using (SqlConnection c = Connection)
         {
-            string customersSql = @"SELECT *
-                                    FROM Customer c
-                                    LEFT JOIN[Order] o ON o.CustomerId = c.Id; ";
+            string customersSql = @"SELECT c.Id,c.[Name],c.[Address],c.Phone,c.Email,c.IsVerified, c.Created, c.LastOnline,
+       o.Id AS OrderId,
+	   o.CustomerId,
+	   o.DatePlaced,
+	   o.DateCompleted
+FROM Customer c
+LEFT JOIN [Order] o ON o.CustomerId = c.Id ";
 
             c.Open();
             using (SqlCommand cmd = c.CreateCommand())
@@ -72,35 +76,38 @@ public class CustomerRepository : BaseRepository, ICustomerRepository
 
                     while (reader.Read())
                     {
-                        if (!customerDictionary.TryGetValue())
+                        var currentRowId = reader.GetInt32(reader.GetOrdinal("Id"));
+                        
+                        if (!customerDictionary.TryGetValue(currentRowId, out currentCustomer))
                         {
-
+                            currentCustomer = new Customer()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                Address = reader.GetString(reader.GetOrdinal("Address")),
+                                Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                                Email = reader.GetString(reader.GetOrdinal("Email")),
+                                IsVerified = reader.GetBoolean(reader.GetOrdinal("IsVerified")),
+                                Created = reader.GetDateTime(reader.GetOrdinal("Created")),
+                                LastOnline = reader.GetDateTime(reader.GetOrdinal("LastOnline")),
+                                Orders = new List<Order>(),
+                            };
+                            customerDictionary.Add(currentCustomer.Id, currentCustomer);
                         }
 
-                        Customer customer = new Customer()
+                        if (!reader.IsDBNull(reader.GetOrdinal("OrderId")))
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            Address = reader.GetString(reader.GetOrdinal("Address")),
-                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
-                            Email = reader.GetString(reader.GetOrdinal("Email")),
-                            IsVerified = reader.GetBoolean(reader.GetOrdinal("IsVerified")),
-                            Created = reader.GetDateTime(reader.GetOrdinal("Created")),
-                            LastOnline = reader.GetDateTime(reader.GetOrdinal("LastOnline")),
-                            Orders = new List<Order>(),
-                        };
-                        customerDictionary.Add(customer.Id, customer );
-
-                        Order order = new Order()
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
-                            DatePlaced = reader.GetDateTime(reader.GetOrdinal("DatePlaced")),
-                            DateCompleted = reader.IsDBNull(reader.GetOrdinal("DateCompleted")) ? null : reader.GetDateTime(reader.GetOrdinal("DateCompleted")),
-                        };
-                        customer.Orders.Add(order);
+                            Order order = new Order()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("OrderId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                                DatePlaced = reader.GetDateTime(reader.GetOrdinal("DatePlaced")),
+                                DateCompleted = reader.IsDBNull(reader.GetOrdinal("DateCompleted")) ? null : reader.GetDateTime(reader.GetOrdinal("DateCompleted")),
+                            };
+                            currentCustomer.Orders.Add(order);
+                        }
                     }
-                    //return customers;
+                    return customerDictionary.Values.ToList();
                 }
             }
         }

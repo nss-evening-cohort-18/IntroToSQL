@@ -21,9 +21,26 @@ public class CustomersController : ControllerBase
 
     // GET: api/<Customers>
     [HttpGet]
-    public List<Customer> Get()
+    public List<Customer> Get(bool? isVerified, bool includeOrders = true)
     {
-        return GetAllCustomersPlainById();
+        if (includeOrders)
+        {
+            return GetAllCustomersSingleQuery();
+        }
+        else
+        {
+            return GetAllCustomersPlain();
+        }
+
+
+        //if (isVerified == null)
+        //{
+
+        //}
+        //else
+        //{
+        //    return GetAllCustomersSingleQuery().Where(c => c.IsVerified == isVerified).ToList();
+        //}
     }
 
     private List<Customer> GetAllCustomersPlain()
